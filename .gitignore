@@ -1,0 +1,6 @@
+yolov7.pt
+traced_model.pt
+*/__pycache__/
+uploads/
+runs/
+__pycache__
