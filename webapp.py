@@ -44,32 +44,14 @@ def detect(path):
 
 @app.route("/")
 def hello_world():
-    return render_template('index.html')
-
-
-# function for accessing rtsp stream
-# @app.route("/rtsp_feed")
-# def rtsp_feed():
-    # cap = cv2.VideoCapture('rtsp://admin:hello123@192.168.29.126:554/cam/realmonitor?channel=1&subtype=0')
-    # return render_template('index.html')
-
-
-# Function to start webcam and detect objects
-
-# @app.route("/webcam_feed")
-# def webcam_feed():
-    # #source = 0
-    # cap = cv2.VideoCapture(0)
-    # return render_template('index.html')
-
-# function to get the frames from video (output video)
+    return render_template('object-detect.html')
 
 def get_frame():
-    folder_path = 'runs/detect'
-    subfolders = [f for f in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, f))]    
-    latest_subfolder = max(subfolders, key=lambda x: os.path.getctime(os.path.join(folder_path, x)))
+    # folder_path = 'runs/detect'
+    # subfolders = [f for f in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, f))]    
+    # latest_subfolder = max(subfolders, key=lambda x: os.path.getctime(os.path.join(folder_path, x)))
     filename = imgpath    
-    image_path = folder_path+'/'+latest_subfolder+'/'+filename    
+    image_path = 'upload/'+filename    
     video = cv2.VideoCapture(image_path)  # detected video path
     #video = cv2.VideoCapture("video.mp4")
     while True:
@@ -93,10 +75,11 @@ def video_feed():
 #The display function is used to serve the image or video from the folder_path directory.
 @app.route('/<path:filename>')
 def display(filename):
-    folder_path = 'runs/detect'
-    subfolders = [f for f in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, f))]    
-    latest_subfolder = max(subfolders, key=lambda x: os.path.getctime(os.path.join(folder_path, x)))    
-    directory = folder_path+'/'+latest_subfolder
+    # folder_path = 'runs/detect'
+    # subfolders = [f for f in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, f))]    
+    # latest_subfolder = max(subfolders, key=lambda x: os.path.getctime(os.path.join(folder_path, x)))    
+    # directory = folder_path+'/'+latest_subfolder
+    directory = "uploads"
     print("printing directory: ",directory)  
     filename = imgpath
     file_extension = filename.rsplit('.', 1)[1].lower()
@@ -106,7 +89,7 @@ def display(filename):
         return send_from_directory(directory,filename,environ)
 
     elif file_extension == 'mp4':
-        return render_template('index.html')
+        return render_template('object-detect.html')
 
     else:
         return "Invalid file format"
@@ -114,20 +97,21 @@ def display(filename):
     
 @app.route("/", methods=["GET", "POST"])
 def predict_img():
-    global imgpath
-    if request.method == "POST":
-        if 'file' in request.files:
-            f = request.files['file']
-            basepath = os.path.dirname(__file__)
-            filepath = os.path.join(basepath,'uploads',f.filename)
-            print("upload folder is ", filepath)
-            f.save(filepath)
+    print("submit")
+    # global imgpath
+    # if request.method == "POST":
+    #     if 'file' in request.files:
+    #         f = request.files['file']
+    #         basepath = os.path.dirname(__file__)
+    #         filepath = os.path.join(basepath,'uploads',f.filename)
+    #         print("upload folder is ", filepath)
+    #         f.save(filepath)
             
-            imgpath = f.filename
-            print("printing predict_img :::::: ", predict_img)
+    #         imgpath = f.filename
+    #         print("printing predict_img :::::: ", predict_img)
 
-            file_extension = f.filename.rsplit('.', 1)[1].lower()    
-            detect(filepath)
+    #         file_extension = f.filename.rsplit('.', 1)[1].lower()    
+    #         detect(filepath)
 
             
     folder_path = 'runs/detect'
@@ -143,12 +127,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Flask app exposing yolov5 models")
     parser.add_argument("--port", default=5000, type=int, help="port number")
     args = parser.parse_args()
-    
+    imgpath = ""
     weights = "./yolov7.pt"
     device = "cpu"
     model = attempt_load(weights, map_location=device)
     names = model.module.names if hasattr(model, 'module') else model.names
     colors = [[np.random.randint(0, 255) for _ in range(3)] for _ in names]
 
-    app.run(host="0.0.0.0", port=args.port)  # debug=True causes Restarting with stat
+    app.run(host="0.0.0.0", port=args.port, debug=True)  # debug=True causes Restarting with stat
 
